@@ -99,3 +99,50 @@ Nos ofrecen un nivel de indirección en una asociación.
             "A qué correo mando esto para aprobación?"  -> ~~federico~~
             "A qué correo mando esto para aprobación?"  -> VARIABLE DE ENTORNO <- federico
 
+
+
+---
+
+
+# Que metemos en el EXCEL?
+
+Nombre
+Email
+Fecha de Nacimiento
+Observaciones
+Mensaje de bienvenida
+Fecha de alta
+Aprobado o no
+
+---
+
+# Pasos que necesitamos dar:
+
+- Tener un excel donde meter esto. Necesitamos crearlo
+- Y dentro del excel meteremos una TABLA con esas columnas. TABLA , TABLA!
+- Donde lo guardo? ??????       VARIABLE DE ENTORNO (RUTA Y NOMBRE DEL ARCHIVO)
+  - OneDrive, SharePoint
+- Tarea: 
+  - Insertar fila en una tabla -> Excel Online (Business)
+  - Necesito una conexión a Excel Online (Business)
+  - Y dentro de esa conexión, necesito una referencia de conexión a ese excel concreto.
+
+
+---
+
+Mañana lo primero será llevar el dato a una BBDD relacional.
+Partir el flujo!
+
+    ACPETACION O NO DE LA SOLICITUD
+FLUJO 1: El flujo tiene que acabe grabando en un excel si se admite o no la persona.
+    
+    
+    EXCEL es la interfaz
+
+    TRAMITE CUANDO HAY UNA SOLICITUD ACEPTADA
+Flujo 2: Que lee cada fila que se mete en el excel
+    Caso que sea necesario:
+    - Genera mensaje de IA
+    - Manda Email
+    - Guarda los buenos BBDD
+    - ...
