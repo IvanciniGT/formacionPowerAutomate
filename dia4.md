@@ -256,3 +256,205 @@ El estado debería estar normalizado en otra tabla, del tipo:
 
         Tabla solicitudes
             Alta -> Trigger de ALTA MODIFICACION O ELIMINACION -> Proceso1 -> Modifica la fila (en la misma tabla)
+
+
+Cuando una fila se actualice a procesada:
+
+
+
+Pendiente de revision -> Me acabn de mandar los datos por alguna fuente
+Pendeiente de procesar -> He verificado los datos, están bien, ahora voy a procesar la solicitud
+Procesado -> He procesado la solicitud, le he dado acceso o no
+    Esto lo deberíamos tener en la tabla: Aprobado, Denegado
+Aprobado -> He dado acceso a la persona
+
+
+
+    Aprobado -> Llamar a una IA para sacar un mensaje de bienvenida personalizado
+                Solicitar revision de ese mensaje a un humano
+                Mandar el mensaje de bienvenida al nuevo usuario
+
+TAREAS:
+1. Dar de alta los estados: Aprobado y Denegado en la tabla de estados.
+2. Nuevo flujo cuando se Aprueba un usuario
+    Aprobado -> 
+                Llamamos al servicio de actividades HTTP GET.. para ver las siguientes actividades que hay disponibles.
+                De ellas cogemos (FOR EACH) el titulo y fecha.
+                Al llamar a la IA, le pasamos adicionalmente el listado de actividades(titulo, fecha) para que genere un mensaje de bienvenida invitando a esas actividades.
+                Llamar a una IA para sacar un mensaje de bienvenida personalizado
+                Solicitar revision de ese mensaje a un humano
+                Mandar el mensaje de bienvenida al nuevo usuario
+
+---
+
+
+Un servicio al llamerle nos devuelve una respuesta HTTP:
+- Cabeceras: 
+  - Código de estado
+- Cuerpo: 
+  - Datos que nos devuelve el servicio (en formato JSON, XML, etc...)
+
+Los datos nos vienen en JSON... Ahora.. una cosa son los datos y otra la estructura de los datos.
+
+## DATOS
+
+[
+    {
+      "id": 1,
+      "titulo": "Sesión de bienvenida",
+      "descripcion": "Presentación general del programa y primeros pasos.",
+      "fecha": "2026-04-20",
+      "hora": "10:00",
+      "modalidad": "Online",
+      "ubicacion": "Microsoft Teams",
+      "plazasDisponibles": 120,
+      "categoria": "Onboarding",
+      "publicada": true
+    },
+    {
+      "id": 2,
+      "titulo": "Taller de Power Automate",
+      "descripcion": "Construcción de flujos básicos con conectores estándar.",
+      "fecha": "2026-04-22",
+      "hora": "16:30",
+      "modalidad": "Presencial",
+      "ubicacion": "Aula 3",
+      "plazasDisponibles": 25,
+      "categoria": "Automatización",
+      "publicada": true
+    }
+  ]
+
+## ESTRUCTURA DE LOS DATOS
+
+Lista de objetos.
+Cada objeto tiene las siguientes propiedades:
+- id: Número entero que identifica la actividad.                            REQUERIDO
+- titulo: Cadena de texto con el título de la actividad.                    REQUERIDO
+- descripcion: Cadena de texto con la descripción de la actividad.
+- fecha: Cadena de texto con la fecha de la actividad en formato AAAA-MM-DD
+- hora: Cadena de texto con la hora de la actividad en formato HH:MM        OPCIONAL
+
+Cualquier servicio en su documentación me informa de la estructura de los datos que me va a devolver. 
+
+La estructura de un documento JSON la podemos definir o repreentar mediante una sintaxis muy concreta, llamada JSON Schema. 
+
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+        "id": {
+            "type": "integer"
+        },
+        "titulo": {
+            "type": "string"
+        },
+        "descripcion": {
+            "type": "string"
+        },
+        "fecha": {
+            "type": "string",
+            "format": "date"
+        },
+        "hora": {
+            "type": "string",
+            "format": "time"
+        },
+        "modalidad": {
+            "type": "string"
+        },
+        "ubicacion": {
+            "type": "string"
+        },
+        "plazasDisponibles": {
+            "type": "integer"
+        },
+        "categoria": {
+            "type": "string"
+        },
+        "publicada": {
+            "type": "boolean"
+        }
+        },
+        "required": ["id", "titulo"]
+    }
+    }
+
+Cuando llamamos a un servicio, invocamos a una RUTA (URL) con un verbo.
+
+URL:     protocolo://servidor       :puerto/ruta?queryString#fragmento
+                     telepizza.com
+         https:// telepizza.com:443/mis-facturas?anio=2024&mes=6
+
+
+Enm power automate como RUTA: URL pasamos solo hasta la 'ruta':
+            https:// telepizza.com:443/mis-facturas
+Porque eso suele ser bastate constante.
+Para facilitarme el componer la URL me ofrece un subformulario de queries... 
+Que me permite poner cada parametro que se entregase en el query string de forma independiente, y luego el lo compone por mi.
+        año        2024
+        mes        6
+
+Y el me genera la ruta completa: 
+        https://telepizza.com:443/mis-facturas?año=2024&mes=6
+
+Body.
+
+Cuando mandamos o recibimos un mensaje por protocolo HTTP.
+
+El protocolo HTTP es como mandar algo en una caja, a la que le ponemos una pegatina por fuera.
+
+Si yo pido en amazon un cd, no me mandan el cd... me mandan una CAJA... que dentro tiene el cd...
+Y en la caja hay una pegatina con propiedades: Mi nombre, mi dirección, etc...
+
+En HTTP, la caja se llama BODY
+Los datos de la pegatina se llaman CABECERAS / HEADERS
+
+Cuando hago una petición: HTTP REQUEST mando siempre una caja con pegatina.
+El que me responde HTTP RESPONSE siempre me manda una caja con pegatina.
+
+Lo que pasa es que las cajas pueden estar vacias, tanto la que mando yo (el el request) como la que me mandan a mi (en el response).
+
+Eso que me to en la caja habitualmente recibe el nombre de payload, o carga útil.
+
+La carga util (payload) se manda en el body (en la caja).
+
+Depende del servicio tendré que mandar cuando lo llamo algo o no en la caja.
+
+Por ejemplo:
+- Amazon mandame un CD. <- REQUEST .. y por ende HAY CAJA.. pero la mando vacía!
+- Amazon me contesta con una caja, dentro del cual hay un CD.
+
+Otro ejemplo:
+- Amazon quiero devolver este artículo. <- REQUEST .. y por ende HAY CAJA.. y en la caja pongo el artículo que quiero devolver, el motivo, etc...
+- Amazon me contesta con una caja, dentro del cual no hay nada.
+
+Lo normal es cuando hago un GET, es decir, pido cosas a un servidor,
+    En mi caja no mando nada!
+    El servidor me contesta con una caja, dentro de la cual me manda los datos que he pedido.
+Lo normal cuando hago un DELETE, es decir, borro cosas en un servidor,
+    En mi caja no mando nada!
+    El servidor me contesta con una caja vacía.
+Lo normal cuando hago un POST, es decir, creo cosas en un servidor,
+    En mi caja mando los datos de lo que quiero crear!
+    El servidor me contesta con una caja, dentro de la cual me manda los datos de lo que ha creado.
+
+El servidor, en la pegatina de su caja de vuelta hay un dato escrito que se llama código de estado(status code). Es un número que me indica si la operación que he pedido se ha realizado correctamente o no.
+    2XX -> OK
+    3XX -> Redirección
+    4XX -> Error del cliente (yo)
+    5XX -> Error del servidor (ellos)
+
+En general, power automate no nos devuelve el código de estado cuando hago una petición HTTP:
+- Me devuelve la caja de vuelta (el body) (NOTA: QUE PUEDE ESTAR VACIA)
+- Marca la tarea HTTP como:
+  - Completada si el código de estado es 2XX
+  - Fallida si el código de estado es 4XX o 5XX
+  - En caso de que el servidor haya devuelto un código de redirección, el propio power automate se encarga de seguir la redirección, y el resultado final dependerá del código de estado que devuelva el servidor al que se redirige.
+
+
+---
+
+¡Hola Tatarabuela de Menchu! Bienvenida a nuestra aplicación, estamos muy contentos de tenerte con nosotros. Queremos invitarte a que te animes a participar en alguna de nuestras próximas actividades, como la Sesión de bienvenida el 20 de abril o el Taller de Power Automate el 22 de abril. Son excelentes oportunidades para aprender, compartir y disfrutar. ¡Te esperamos con mucha energía y ganas de crecer juntos!
