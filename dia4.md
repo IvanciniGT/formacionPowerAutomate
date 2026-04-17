@@ -146,3 +146,43 @@ Flujo 2: Que lee cada fila que se mete en el excel
     - Manda Email
     - Guarda los buenos BBDD
     - ...
+  - 
+  
+---
+
+
+
+# Este flujo que tenemos, cómo l partimos / refactorizamos... para que tenga sentido y sea más facil de mantener y evolucionar!
+
+- Logica / Salidas
+- Funciones pequeñas y una que orqueste!
+- Orquestador
+
+---
+
+Hoy en día la tendencia es:
+- Nada de monolitos (Mega flujo que hace todo).. Y cuidado... Un orquestador... es una forma encubierta de eso.
+- Queremos componentes desacoplados!
+- Cómo comunicamos esos componentes:
+  - Colas de mensajes / BBDD
+  - Reactividad (eventos)
+
+Nuestro proceso hace muchas cosas! Y queremos que sean cosas Que no estén acopladas entre si.
+Que no dependan unas de otras.
+
+    Ahora mismo el procesamiento (el determinar si le doy acceso o no) depende FORMS
+
+Lo que queremos es que esos componentes que vamos a crear dependan de APIs. No quiero que dependan entre si.
+
+    Formulario Microsoft <- Lógica de validación <- Base de datos
+
+Necesitamos establecer puntos intermedios = API = ARTEFACTOS
+
+
+    Formulario Forms -> Lógica de validación
+
+    Formulario Forms                -> BBDD <- Lógica de validación -> BBDD <- Tramite cuando le damos acceso       Mandar un email de bienvenida
+    Formulario Forms v2             -> BBDD                                 <- Tramite cuando le no damos acceso
+    Emails / IA Extracción de datos -> BBDD                                 <- Tramite 2 cuando le damos acceso     Mandar una notificacion a teams consolidad al día
+
+
