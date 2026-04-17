@@ -181,8 +181,78 @@ Necesitamos establecer puntos intermedios = API = ARTEFACTOS
 
     Formulario Forms -> Lógica de validación
 
+                                       EXCEL     EDAD   VALIDANDO
     Formulario Forms                -> BBDD <- Lógica de validación -> BBDD <- Tramite cuando le damos acceso       Mandar un email de bienvenida
     Formulario Forms v2             -> BBDD                                 <- Tramite cuando le no damos acceso
     Emails / IA Extracción de datos -> BBDD                                 <- Tramite 2 cuando le damos acceso     Mandar una notificacion a teams consolidad al día
 
 
+Dataverse es la BBDD Interna de la Power Platform, y es la opción natural para estos escenarios.
+
+    Nombre
+    Email
+    Fecha de Nacimiento     OPCIONAL
+    Edad                    OPCIONAL
+    Observaciones           OPCIONAL
+    Origen
+    Estado     Pendiente de revisar, Pendiente de procesar, Procesado, Rechazado, Error
+
+    Si un dato no tiene edad y si tiene fecha de nacimiento -> calculamos edad
+    Si un dato no tiene fecha de nacimiento y si tiene edad -> ok, no hago nada.
+    Si un dato no tiene fecha de nacimiento ni edad, o no tiene email o no tiene nombre -> Rechazo directo, no hago nada. -> Mensaje de vuelta al usuario
+
+    Entrada -> Pendiente de revisar -> Si edad y demás (calculo edad si es necesario) -> Pendiente de procesar                                 
+                                    -> Si no  Rechazado
+
+    Los pendientes de procesar -> Procesa la lógica ... y los marca como procesados si no hay problema
+                                                        Si hay problema los marca como error
+
+
+SoC. Separation of Concerns. Lo enunción un programador llamado Edsger Dijkstra. Paper : The humble programmer. En ese paper se habla de la importancia de separar las preocupaciones, de no mezclar cosas que no tienen nada que ver entre si.
+
+
+
+---
+Quiero una tabla de Solicitudes, que tenga estas columnas:
+    Nombre                  Obligatorio
+    Email                   Obligatorio
+    Fecha de Nacimiento     OPCIONAL
+    Edad                    OPCIONAL
+    Observaciones           OPCIONAL
+    Origen                  Obligatorio (texto)
+    Estado:                 Pendiente de revisar, Pendiente de procesar, Procesado, Rechazado, Error
+
+El estado debería estar normalizado en otra tabla, del tipo: 
+    Solicitudes >- Estados
+
+
+
+                "message": "URL was not parsed due to an ODataUnrecognizedPathException. Resource not found for the segment 'Pendiente de revisar' provided in the URL."
+
+
+    ---- 1 flujo -------------------------    ------------------1 flujo ----------------------------------
+    Forms -> Captura de datos -> Dataverse <- Asegurar datos previos -> Calcular edad? -> Actalizar estado: Pendiente de procesar, Rechazado
+                                    Pendiente de revisar? 
+
+    ---- 1 flujo ------------              -------- Servicio HTTP ----- (otro flujo)
+    Forms  -> Captura de datos   -->         Recibe datos -> Dataverse
+    Forms2 -> Captura de datos   --> 
+    Email  -> Captura de datos   -->
+
+
+    Trigger que usaremos:
+    Flujo automatizado -> Dataverse: Cuando se Añada, modifique o elimine una fila.
+
+
+
+    CAPTURA                                                  TABLA 1 (Pendientes de revisar)
+    Forms  -> Captura de datos   -->         Recibe datos -> Dataverse
+    Forms2 -> Captura de datos   --> 
+    Email  -> Captura de datos   -->
+
+    TABLA 1 --> Verificación de datos -> TABLA 2 (Pendientes de procesar)
+                                      -> TABLA 3 (Rechazado)
+
+
+        Tabla solicitudes
+            Alta -> Trigger de ALTA MODIFICACION O ELIMINACION -> Proceso1 -> Modifica la fila (en la misma tabla)
